@@ -19,6 +19,7 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "odometry.h"
+#include "pid.h"
 
 /****************************************************************************************************
  *                                         Private defines
@@ -33,6 +34,9 @@ Encoder left_encoder("left_encoder");
 Encoder right_encoder("right_encoder");
 
 Odometry odometry("odometry");
+
+PID lin_vel_pid("lin_pid");
+PID ang_vel_pid("ang_pid");
 
 /****************************************************************************************************
  *                                          Private struct
@@ -111,6 +115,10 @@ static void main_init(void)
     odometry.load_config();
     odometry.set_encoders(left_encoder, right_encoder);
     odometry.start();
+
+    /* Load PID controllers NVS configuration */
+    lin_vel_pid.load_config();
+    ang_vel_pid.load_config();
 }
 
 /**
