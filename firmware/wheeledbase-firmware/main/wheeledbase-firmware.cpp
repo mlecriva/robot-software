@@ -7,17 +7,17 @@
  * @copyright (c) 2022
  * 
  */
-
 #include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/portmacro.h"
+
+#include "encoder.h"
 #include "esp_log.h"
 #include "esp_spi_flash.h"
 #include "esp_system.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
 #include "freertos/task.h"
+#include "nvs.h"
+#include "nvs_flash.h"
 #include <stdio.h>
 
 /****************************************************************************************************
@@ -28,6 +28,9 @@
  *                                          Private variable
  ***************************************************************************************************/
 const static char* TAG = "main";
+
+Encoder left_encoder("left_encoder");
+Encoder right_encoder("right_encoder");
 
 /****************************************************************************************************
  *                                          Private struct
@@ -66,10 +69,8 @@ void app_main(void)
     ESP_LOGI(TAG, "Wheeledbase is successfully initialized!");
 
     while (1) {
-    {
         vTaskDelay(portMAX_DELAY);
     }
-
 }
 
 /****************************************************************************************************
@@ -81,6 +82,28 @@ void app_main(void)
  */
 static void main_init(void)
 {
+    /* Initialize NVS */
+    esp_err_t err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_LOGE(TAG, "Fail to initialize NVS flash");
+        /* NVS partition was truncated and needs to be erased
+         * Retry nvs_flash_init
+         */
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
+
+    /* Initialize encoders */
+    left_encoder.attach_counter(PCNT_UNIT_0, GPIO_NUM_5, GPIO_NUM_16);
+    right_encoder.attach_counter(PCNT_UNIT_1, GPIO_NUM_17, GPIO_NUM_18);
+
+    /* Load encoders NVS configuration */
+    left_encoder.load_config();
+    right_encoder.load_config();
+
+    /* Reset current encoder counters */
+    left_encoder.reset();
+    right_encoder.reset();
 }
 
 /**
