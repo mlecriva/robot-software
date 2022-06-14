@@ -18,7 +18,7 @@
 #include "freertos/task.h"
 #include "nvs.h"
 #include "nvs_flash.h"
-#include <stdio.h>
+#include "odometry.h"
 
 /****************************************************************************************************
  *                                         Private defines
@@ -31,6 +31,8 @@ const static char* TAG = "main";
 
 Encoder left_encoder("left_encoder");
 Encoder right_encoder("right_encoder");
+
+Odometry odometry("odometry");
 
 /****************************************************************************************************
  *                                          Private struct
@@ -104,6 +106,11 @@ static void main_init(void)
     /* Reset current encoder counters */
     left_encoder.reset();
     right_encoder.reset();
+
+    /* Configure odometry */
+    odometry.load_config();
+    odometry.set_encoders(left_encoder, right_encoder);
+    odometry.start();
 }
 
 /**
